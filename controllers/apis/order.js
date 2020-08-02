@@ -1,4 +1,5 @@
 const Order = require("../../models/order");
+const User = require("../../models/user");
 const Product = require("../../models/product");
 const models = require("../../models");
 const Joi = require("joi");
@@ -201,6 +202,21 @@ exports.getUserHistory = async (req, res, next) => {
     if (validate) return res.status(422).json({ message: validate });
 
     let { user_id } = req.body;
+
+    let user = await User.findOne({
+      where: {
+        id: user_id,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: "User not found",
+        status_code: "01",
+      });
+    }
+
     let orders = await Order.findAll({
       where: {
         user_id: user_id,
@@ -220,7 +236,11 @@ exports.getUserHistory = async (req, res, next) => {
       order: [["id", "DESC"]],
     });
 
-    let response = {};
+    let response = {
+      firstname: user.firstname,
+      lastname: user.lastname,
+      tel: user.tel,
+    };
     if (orders.length > 0) {
       let data = orders.map((order) => {
         let total_price = order.unit * order["product.product_price"];
@@ -237,15 +257,16 @@ exports.getUserHistory = async (req, res, next) => {
       });
 
       response = {
-        firstname: orders[0]["user.firstname"],
-        lastname: orders[0]["user.lastname"],
+        firstname: user.firstname,
+        lastname: user.lastname,
+        tel: user.tel,
         order_list: data,
       };
     }
 
     return res.status(200).json({
       status: true,
-      message: "Get User Successfully",
+      message: "Get User Order History Successfully",
       data: response,
       status_code: "00",
     });
