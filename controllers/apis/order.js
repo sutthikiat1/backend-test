@@ -217,33 +217,36 @@ exports.getUserHistory = async (req, res, next) => {
         },
       ],
       raw: true,
-
       order: [["id", "DESC"]],
     });
 
-    let data = orders.map((order) => {
-      let total_price = order.unit * order["product.product_price"];
-      let obj = {
-        id: order.id,
-        product_name: order["product.product_name"],
-        product_price: order["product.product_price"],
-        total_price: total_price,
-        status: order.status,
-        create_at: moment(order.createdAt).format("DD-MM-YYYY HH:mm"),
-      };
-      return obj;
-    });
+    let response = {};
+    if (orders.length > 0) {
+      let data = orders.map((order) => {
+        let total_price = order.unit * order["product.product_price"];
+        let obj = {
+          id: order.id,
+          product_name: order["product.product_name"],
+          product_price: order["product.product_price"],
+          unit: order.unit,
+          total_price: total_price,
+          status: order.status,
+          create_at: moment(order.createdAt).format("DD-MM-YYYY HH:mm"),
+        };
+        return obj;
+      });
 
-    let resposne = {
-      firstname: orders[0]["user.firstname"],
-      lastname: orders[0]["user.lastname"],
-      order_list: data,
-    };
+      response = {
+        firstname: orders[0]["user.firstname"],
+        lastname: orders[0]["user.lastname"],
+        order_list: data,
+      };
+    }
 
     return res.status(200).json({
       status: true,
       message: "Get User Successfully",
-      data: resposne,
+      data: response,
       status_code: "00",
     });
   } catch (e) {
